@@ -1,0 +1,116 @@
+#!/bin/python3
+
+import netifaces
+import os
+import sys
+import getopt
+import json
+
+IFACE_STORE = 'ifaces.json'
+VERBOSE = False
+
+def main():
+	global VERBOSE
+
+	iface = ''
+	try:
+		opts, args = getopt.getopt(sys.argv[1:], 'vi:',["iface=", "verbose"])
+	except getopt.GetoptError:
+		usage()
+		sys.exit(3)
+	for opt, arg in opts:
+		if opt in ("-i", "--iface"):
+			iface = arg
+		elif opt in ("-v", "--verbose"):
+			VERBOSE = True
+		else:
+			usage()
+			sys.exit(3)
+	if not opts or len(opts) > 3:
+		usage()
+		sys.exit(3)
+
+	if iface == '':
+		usage()
+		sys.exit(3)
+
+	persist_dir = os.path.expanduser('~') + "/.ddns"
+	change_to_settings_dir(persist_dir)
+
+	ifaces = load_historic_iface_addrs()
+
+	# Get current iface IP
+	iface_addr = get_iface_ip(iface)
+
+	# Check current if ad against previous
+	try:
+		old_addr = ifaces[iface]
+	except KeyError:
+		old_addr = ''
+
+	if VERBOSE:
+		print(f"Old address: {old_addr}, New address: {iface_addr}")
+
+	# Nothing has changed, all is fine
+	if iface_addr == old_addr:
+		if VERBOSE:
+			print("Nothing has changed, all is fine")
+		sys.exit(0)
+
+	# TODO: Implement ddns call
+
+	ifaces[iface] = iface_addr
+	store_historic_iface_addrs(ifaces)
+
+
+def change_to_settings_dir(path):
+	while True:
+		try:
+			os.chdir(path)
+		except PermissionError:
+			os.write(2, f"Error: {path} is not accessible\n".encode('utf-8'))
+			sys.exit(1)
+		except FileNotFoundError:
+			try:
+				os.mkdir(path)
+				continue
+			except:
+				os.write(2, f"Error: Cannot create {path}\n".encode('utf-8'))
+				sys.exit(2)
+		break
+
+def get_iface_ip(iface):
+	try:
+		addrs = netifaces.ifaddresses(iface)
+	except ValueError:
+		os.write(2, b"ValueError: You must specify a valid interface name.\n")
+		sys.exit(5)
+	try:
+		iface_addrs = addrs[netifaces.AF_INET]
+	except KeyError:
+		os.write(2, f"No inet address for iface {iface}\n".encode('utf-8'))
+		sys.exit(4)
+
+	iface_addr = iface_addrs[0]['addr']
+
+	return(iface_addr)
+
+def load_historic_iface_addrs():
+	global IFACE_STORE
+	try:
+		f = open(IFACE_STORE, 'r')
+	except:
+		return({})
+
+	return(json.load(f))
+	
+def store_historic_iface_addrs(ifaces):
+	global IFACE_STORE
+	f = open(IFACE_STORE, 'w')
+	json.dump(ifaces, f)
+
+def usage():
+	os.write(2, f"Usage: {sys.argv[0]} -i|--iface (interface_name)\n".encode('utf-8'))
+		
+if __name__ == '__main__':
+    main()
