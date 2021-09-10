@@ -30,7 +30,7 @@ Usage: ./check-and-update-ddns -i|--iface (interface_name) (-v|--verbose)
 ### via Cron (recommended)
 Add script to cron. Suggested crontab:
 ```
-5 * * * * /home/you/ddns-update/check-and-update-ddns -i eth1
+*/5 * * * * /home/you/ddns-update/check-and-update-ddns -i eth1
 ```
 
 Scheduled regularly through cron or run manually, this script will check the current IP of the given network interface with that of the previous run. If different, a shell script will be called.
