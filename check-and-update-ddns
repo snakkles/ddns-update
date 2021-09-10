@@ -8,6 +8,7 @@ import json
 
 IFACE_STORE = 'ifaces.json'
 VERBOSE = False
+UPDATE_SCRIPT = 'update-ddns.sh'
 
 def main():
 	global VERBOSE
@@ -34,15 +35,15 @@ def main():
 		usage()
 		sys.exit(3)
 
-	persist_dir = os.path.expanduser('~') + "/.ddns"
+	persist_dir = os.path.expanduser('~') + "/.ddns-update"
 	change_to_settings_dir(persist_dir)
 
 	ifaces = load_historic_iface_addrs()
 
-	# Get current iface IP
+	# Get current iface addr
 	iface_addr = get_iface_ip(iface)
 
-	# Check current if ad against previous
+	# Check current iface addr against previous
 	try:
 		old_addr = ifaces[iface]
 	except KeyError:
@@ -57,7 +58,7 @@ def main():
 			print("Nothing has changed, all is fine")
 		sys.exit(0)
 
-	# TODO: Implement ddns call
+	os.system(os.path.dirname(__file__) + "/" +  UPDATE_SCRIPT)
 
 	ifaces[iface] = iface_addr
 	store_historic_iface_addrs(ifaces)
@@ -110,7 +111,7 @@ def store_historic_iface_addrs(ifaces):
 	json.dump(ifaces, f)
 
 def usage():
-	os.write(2, f"Usage: {sys.argv[0]} -i|--iface (interface_name)\n".encode('utf-8'))
+	os.write(2, f"Usage: {sys.argv[0]} -i|--iface (interface_name) (-v|--verbose)\n".encode('utf-8'))
 		
 if __name__ == '__main__':
     main()
