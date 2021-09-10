@@ -1,5 +1,5 @@
 # ddns-update
-DDNS update utility, written for (Mythic beasts DDNS API v2)[https://www.mythic-beasts.com/support/api/dnsv2/dynamic-dns], but easily modifiable.
+DDNS update utility, written for [Mythic beasts DDNS API v2](https://www.mythic-beasts.com/support/api/dnsv2/dynamic-dns), but easily modifiable.
 
 Currently compatible with Linux systems and shells only
 
